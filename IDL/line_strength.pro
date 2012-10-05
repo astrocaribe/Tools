@@ -3,18 +3,18 @@
 ;
 ; :Description:
 ;    Return the coefficients of a gaussian fit to a line,
-;    and measure the FWHM of said line.
+;    and measure the strength of said line.
 ;
 ; :Parameters:
 ; 	:Params:
-; 	 outfile  - output file for Gaussian plot
+; 	 outfile  - output file for Gaussian fit plot
 ;    wave     - wavelength [arbitrary]
 ;    flux     - flux [arbitrary]
 ;
 ;
 ; :Output:
-;    fwhm - The strength of the spectral line. The units are the
-;           same as that input into the function
+;    intcy - The strength of the spectral line. The units are the
+;            same as that input into the function
 ;           
 ;    outfile - A hardcopy plot of the spectral region, including the 
 ;              smoothed line, gaussian fit and the line location 
@@ -27,6 +27,9 @@
 ;         range). This version will generate a plot of the line 
 ;         that includes a gaussian estimate, and the function 
 ;         will return the coefficients of the gaussian fit.
+;         
+;   0.2 - Changed the value returned from the FWHM to the
+;         calculated intensity of the line.      
 ;
 ; :Author:
 ; 	leblanc
@@ -48,18 +51,18 @@ function line_strength, outfile, wave, flux
   print, coeff[0], coeff[1], coeff[2]
   print
 
-  ;Determine lower and upper limits of the wings for estimating the
-  ;continuum, ± 4sigma
-  llim = coeff[1]-4.*coeff[2]
-  ulim = coeff[1]+4.*coeff[2]
-  ind = where(wave lt llim OR wave gt ulim)
-    
+  ;Determine lower and upper limits of the wings
+  llim = coeff[1]-3.*coeff[2]
+  ulim = coeff[1]+3.*coeff[2]
+  ind = where(wave gt llim AND wave lt ulim)
 
   ;Calculate the strength of the line (FWHM) for the input line
   ;Units are the same of the input spectrum
   fwhm = 2.*sqrt(2.*alog(2.))*coeff[2]
-  
-  
+
+  ;Calculate the strength of the above line
+  intct = tsum(wave, flux, ind[0], ind[-1])
+    
   ;Generate a plot of the line with the estimated Gaussian fit
   xlim = [min(wave), max(wave)]
   pos = idl_setplot(outfile, 16., 9.)   ;sets up and opens a PS device
@@ -76,16 +79,18 @@ function line_strength, outfile, wave, flux
              color=['dark green', 'red', 'black']
         
   line_pos = strtrim(string(coeff[1], format = '(f10.3)') ,2)    
-  line_str = strtrim(string(fwhm, format = '(f8.4)') ,2)
+  line_fwhm = strtrim(string(fwhm, format = '(f8.4)') ,2)
+  line_intct = strtrim(string(intct, format = '(f8.4)') ,2)
         
   xyouts, 0.7, 0.42, 'Position: ' + line_pos, /normal      
-  xyouts, 0.7, 0.40, 'Strength: ' + line_str, /normal      
+  xyouts, 0.7, 0.40, 'FWHM: ' + line_fwhm, /normal
+  xyouts, 0.7, 0.38, 'Intensity: ' + line_intct, /normal
+       
   
   ;Close the graphics plotting device
   device, /close
   
-  
-  ;Return the calculation on the strength of the line (FWHM)
-  return, fwhm
+  ;Return the calculation on the strength of the line
+  return, intct
     
 end
