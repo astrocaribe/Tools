@@ -1,10 +1,25 @@
 # Import necessary modules
+from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
+import pyfits as pf
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.1"
+__version__ = "1.2"
+
+# HISTORY
+#    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
+#                  Vr. 1.1: Changed/added features to centroid function
+#    2. Sep 2013 - Vr. 1.2: 
+#                          - Added readimage function
+#                          - Added diff_image function
+#                          - Added a1600_pixtosky function
+#                          - Added Rotate2D function
+#                          - Added ta_transform function
+#                          - Changed the print function to the Python 3.0 format
+#                            for future compatibility.
+
 
 # Utility definitions
 # *********************** centroid ***********************
@@ -94,13 +109,13 @@ def centroid(grid, gw, initial=None, debug=False, verbose=False):
     
     # Set the initial guess coordinates
     if initial == None: 
-        if verbose: print "Initial Guess (x,y)..."
+        if verbose: print("Initial Guess (x,y)...")
         init_guess = ((grid.shape[1]/2) - 1, (grid.shape[0]/2) - 1)
     else:
-        if verbose: print "Centroid..."
+        if verbose: print("Centroid...")
         init_guess = initial #(initial[1], initial[0])
         
-    if verbose: print "(centroid) Centroid Search Position: ({:.2f}, {:.2f})".format(init_guess[0], init_guess[1])    
+    if verbose: print("(centroid) Centroid Search Position: ({:.2f}, {:.2f})".format(init_guess[0], init_guess[1]))    
     
 
     # ************* Centroiding *************
@@ -161,10 +176,10 @@ def centroid(grid, gw, initial=None, debug=False, verbose=False):
   
     
     #Diagnostic output
-    if verbose: print "(centroid) Centroiding window: ({:.2f}, {:.2f}), ({:.2f}, {:.2f})".format(gw_xl, gw_yl, gw_xu, gw_yu)
-    if verbose: print "(centroid) Total Pixel Count:", np.sum(newGrid)
-    if verbose: print "(centroid) Average Pixel Count:", np.average(newGrid)
-    if verbose: print "(centroid) Grid Shape:", newGrid.shape
+    if verbose: print("(centroid) Centroiding window: ({:.2f}, {:.2f}), ({:.2f}, {:.2f})".format(gw_xl, gw_yl, gw_xu, gw_yu))
+    if verbose: print("(centroid) Total Pixel Count:", np.sum(newGrid))
+    if verbose: print("(centroid) Average Pixel Count:", np.average(newGrid))
+    if verbose: print("(centroid) Grid Shape:", newGrid.shape)
 
     # Weights and weighted averages
     weight_i = np.sum(newGrid, 0)
@@ -180,7 +195,7 @@ def centroid(grid, gw, initial=None, debug=False, verbose=False):
     x = np.sum(weight_avg_i)/np.sum(weight_i)
     y = np.sum(weight_avg_j)/np.sum(weight_j)
     centroid = (x+gw_xl, y+gw_yl)
-    if verbose: print "(centroid) Raw X/Y and centroid: ({:.2f}, {:.2f})".format(x, y)
+    if verbose: print("(centroid) Raw X/Y and centroid: ({:.2f}, {:.2f})".format(x, y))
     # ************* Centroiding *************
   
     
@@ -212,7 +227,7 @@ def centroid(grid, gw, initial=None, debug=False, verbose=False):
  
     
     
-    if verbose: print "(centroid) New centroid: ({:.2f}, {:.2f})".format(centroid[0], centroid[1])
+    if verbose: print("(centroid) New centroid: ({:.2f}, {:.2f})".format(centroid[0], centroid[1]))
     
     # If in debugging mode, return the figure as well, else just return the centroid
     if debug: return centroid, fig
@@ -243,6 +258,231 @@ def bytescl(img, bottom, top):
 # *********************** bytescl ***********************
 
 
+# *********************** readimage ***********************
+# Extract an image from a multi-ramp integration FITS file
+def readimage(infile):
+    '''
+    ABOUT:
+        Extract am image from a multi-ramp integration FITS file. Currently, JWST NIRSpec FITS
+        images consists of a 3-ramp integration, with each succesive image containing more photon
+        counts than the next. This meathod of reading/combining the images ensures the elimination
+        of cosmic rays that may occur in a few of the frames, as well (more importantly) reduce the
+        impact of hot pixels by chossing the minimum pixel count on a pixel by pixel basis.
+
+    INPUT(S):
+        infile - A multi-frame FITS image. In this case, a 3-frame image is expected as per test specs.
+
+    OUTPUT(S):
+        omega - A combined FITS image that compares the differenced 3-frame image (generating alpha, beta
+            image frames), and selecting the lowest count pixel between the two.
+
+     HISTORY:
+        Ver. 1: May 2013
+            - Original function            
+    '''
+    
+    # Read in input file, and generate the alpha and beta images
+    # (for subtraction)
+    master = pf.getdata(infile)
+    alpha = master[1, :, :] - master[0, :, :]
+    beta = master[2, :, :] - master[1, :, :]
+    
+    # Generate a final image by doing a pixel to pixel check 
+    # between alpha and beta images, storing lower value
+    omega = np.where(alpha < beta, alpha, beta)
+     
+    print('(readimage): Image {} read ...'.format(infile))
+        
+    # Return the extracted image
+    return omega
+# *********************** readimage ***********************
+
+
+# *********************** diff_image ***********************
+# New method for conducting image differencing
+def diff_image(im1, im2):
+    '''
+    ABOUT: 
+           This function takes as input the images to be subtracted,
+           and output the final subtracted image. The order in which
+           the input images are input is important; the 2nd will be 
+           subtracted from the first.
+    INPUT:
+           im1, im2 - The images for which differencing is to be 
+           perfomred.
+    OUTPUT: 
+           output_im - Final difference image. Dimensions match that
+           of im1 and im2.
+
+    HISTORY:
+        Ver. 1: May 2013
+           - Original function
+    '''
+    
+    # Subtract the min of im1 and im2 for im1
+    output_im = im1 - np.where(im1 < im2, im1, im2)
+    
+    return output_im
+# *********************** diff_image ***********************
+
+
+
+# *********************** a1600_pixtosky ***********************
+def a1600_pixtosky(angle_d, pixcrd, origin):
+    '''
+    ABOUT: 
+        This function converts input pixels coordinates into sky coordinates for 
+        the A1600 aperture on the NIRSpec MSA.
+
+    INPUT:
+        angle - The rotation angle between the aperture grid and the sky coordinates, 
+                in degrees.
+
+        (x_pix, y_pix) - The pixel coordinate that needs to be converted. This can
+            be a single coordinate, or a numpy array of coordinates.
+
+    OUTPUT:
+        (x_sky, y_sky) - The computed centroid coordinates, rounded to nearest 1. The 
+            final coordinates are relative to grid dimensions. Same length as 
+            (x_pix, y_pix) above.
+
+    HISTORY:
+        Ver. 1.0: January 2013
+            - Original function
+    '''
+    __author__ = "Tommy Le Blanc"
+    __version__ = "1.0"
+    
+    # Import necessary modules
+    import pywcs
+    
+    # Change angle from degrees to radians
+    angle_r = np.radians(angle_d)
+    
+    # Create a new WCS object of two axes
+    wcs = pywcs.WCS(naxis=2)
+
+    # Setup a pixel projection
+    wcs.wcs.crpix = [7.5, 7.5]
+    wcs.wcs.crval = [321.536442, 5.689362]
+    wcs.wcs.cdelt = np.array([0.106841547, 0.108564798])
+    wcs.wcs.pc = ([np.sin(angle_r),np.cos(angle_r)],
+                  [np.cos(angle_r),-np.sin(angle_r)])
+
+
+    # Calculate new coordinates for each pair of input coordinates
+    world = wcs.wcs_pix2sky(pixcrd, origin)
+    
+    return world
+# *********************** a1600_pixtosky ***********************
+
+
+# *********************** ta_transform ***********************
+def ta_transform(pnts, mirror=False):
+    '''
+    ABOUT: 
+           This function transforms extracted pixel positions to sky
+           in x-y space. For this application, a mirror along the 
+           aperture "horizaontal" is included (using the 'Mirror'
+           keyword) to correctly represent the converted coordinates. 
+    INPUT:
+           pnts - A list of pixel coordinates. Can be only one pair, 
+                  or several.
+    OUTPUT: 
+           transformed_pnts - Transformed pixel coordinates, in sky.
+
+     HISTORY:
+         Ver.1: May 2013
+             - Original function
+    '''
+    # Import necessary modules
+    import numpy as np
+
+    # Function constants
+    
+    # Transformation derivatives (as per pixel)
+    dxdx, dydx = .076839, -0.068522
+    dxdy, dydy = .069291, .079071
+    
+    # Reference point in pixels and sky coordinates, respectively
+    Xo_pix, Yo_pix = 989.204158, 1415.929442
+    Xo_sky, Yo_sky = 321.536442, 5.689362
+    
+    
+    # Split the entered tuples into seperate variables
+    #print('pnts LENGTH!!! = {}'.format(len(pnts)))
+    if len(pnts) > 1:
+        X_pix, Y_pix = np.array(zip(*pnts))
+    else:
+        X_pix, Y_pix = pnts[0][0], pnts[0][1]
+
+        
+    print('(ta_tranform): X_pix {}'.format(X_pix))
+    print('(ta_tranform): Y_pix {}'.format(Y_pix))
+    print('(ta_tranform): type {}'.format(type(X_pix)))
+    
+    ## Convert angle to radians
+    #ang = np.deg2rad(angle)
+    
+    # Calculate the coordinate transforms
+    X_temp = Xo_sky + (dxdx*(X_pix-Xo_pix)) + (dxdy*(Y_pix-Yo_pix))
+    Y_temp = Yo_sky + (dydx*(X_pix-Xo_pix)) + (dydy*(Y_pix-Yo_pix))
+    
+    
+    if mirror:
+        # Rotate/Mirror the tranformed coordinated
+        if len(pnts) > 1:
+            temp = np.array(zip(X_temp, Y_temp))
+        else:
+            temp = np.array((X_temp, Y_temp))
+        
+        cnt = np.array((321.536442, 5.689362))
+        
+        a, b = 0.992682, 0.120757
+        transformed_pnts = np.dot(temp-cnt,np.array([[a,b],[b,-a]]))+cnt
+        
+        print('(ta_tranform): Mirroring at y=x included!\n')
+    
+    else:
+        print('(ta_tranform): No mirroring included')
+        if len(pnts) > 1:
+            transformed_pnts = np.array(zip(X_temp, Y_temp))
+        else:
+            transformed_pnts = np.array((X_temp, Y_temp))
+    
+    return transformed_pnts
+# *********************** ta_transform ***********************
+
+
+# *********************** Rotate2D ***********************
+def Rotate2D(pts,cnt,angle):
+    '''
+    ABOUT:
+        Rotates a set of points in 2D space around a center point.
+    
+    INPUT(S):
+        pts - A set/list of points that need to be rotated.
+        cnt - The center of rotation. Coordinate in the form of (x, y) expected.
+        angle - The angle of rotation that needs to be computed, in radians.
+
+    OUTPUT(S):
+        rot_pts - The resulting points after rotation has been calculated.
+
+    HISTORY:
+        Ver. 1: Jan 2013
+            - Original function
+    '''
+
+    import numpy as np
+    
+    ang = np.deg2rad(angle)
+    
+    rot_pts = np.dot(pts-cnt,np.array([[np.sin(ang),np.cos(ang)],[np.cos(ang),np.sin(-ang)]]))+cnt
+    return rot_pts
+# *********************** Rotate2D ***********************
+
+
+
 
 # Print diagnostic message
-print "(tautils): TA Utilities Version {} loaded!".format(__version__)
+print("(tautils): TA Utilities Version {} loaded!".format(__version__))
