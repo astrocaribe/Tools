@@ -49,7 +49,7 @@ def centroid(grid, gw, initial=None, debug=False, verbose=False):
             diagnostic image is produced or passed.
 
     OUTPUT(S):
-        centroid - The computed centroid coordinates, rounded to nearest 1. The 
+        centroid - The computed centroid coordinates. The 
             final coordinates are relative to grid dimensions.
 
         fig - diagnostic figure generated to troubleshoot the centroiding 
