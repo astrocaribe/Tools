@@ -6,7 +6,7 @@ import pyfits as pf
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.2"
+__version__ = "1.2.1"
 
 # HISTORY
 #    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
@@ -19,7 +19,8 @@ __version__ = "1.2"
 #                          - Added ta_transform function
 #                          - Changed the print function to the Python 3.0 format
 #                            for future compatibility.
-
+#    3. Sep 2013 - Vr. 1.2.1:
+#                          - Updated readimage to read from ext=1
 
 # Utility definitions
 # *********************** centroid ***********************
@@ -271,6 +272,7 @@ def readimage(infile):
 
     INPUT(S):
         infile - A multi-frame FITS image. In this case, a 3-frame image is expected as per test specs.
+                 **Note** The input image must be in ext=1 for this version to work.
 
     OUTPUT(S):
         omega - A combined FITS image that compares the differenced 3-frame image (generating alpha, beta
@@ -283,7 +285,7 @@ def readimage(infile):
     
     # Read in input file, and generate the alpha and beta images
     # (for subtraction)
-    master = pf.getdata(infile)
+    master = pf.getdata(infile, 1)
     alpha = master[1, :, :] - master[0, :, :]
     beta = master[2, :, :] - master[1, :, :]
     
