@@ -25,8 +25,7 @@ __version__ = "1.2.1"
 # Utility definitions
 # *********************** centroid ***********************
 def centroid(grid, gw, initial=None, debug=False, verbose=False):
-    '''
-    ABOUT: 
+    """ 
         This function takes the input image grid, as well as a grid width 
         (in pixel units) over which to do a final centroiding. An initial guess 
         is executed over the entire input image, and then another centroiding is 
@@ -34,20 +33,17 @@ def centroid(grid, gw, initial=None, debug=False, verbose=False):
         centroid coordinate (rounded to account for any loss of accuracy due to 
         using floors throughout computation).
 
-    INPUT(S):
-        grid - Image for which centrod is to be computed. For now, an NxN image
+    Keyword arguments:    
+    grid -- Image for which centrod is to be computed. For now, an NxN image
             is required.
-
-        gw - The grid width (in pixels) over which to compute the final centroid.
-        initial - The optional initial guess coordinates. If none is supplied, 
+    gw --   The grid width (in pixels) over which to compute the final centroid.
+            initial - The optional initial guess coordinates. If none is supplied, 
             then the approximate center (+/- 1 px) is used. Note that the co-
             ordinates are recognized in normal order (i.e, initial=[x,y]).
-
-        initial - An initial guess for targeted centroiding, in the form (x, y).
-            Defaults to None if the keyword is omiited.
-
-        debug - Toggle debugging mode. Defaults to False, in which case no 
-            diagnostic image is produced or passed.
+    initial -- An initial guess for targeted centroiding, in the form (x, y).
+               (default None).
+    debug -- Toggle debugging mode. Defaults to False, in which case no 
+             diagnostic image is produced or passed.
 
     OUTPUT(S):
         centroid - The computed centroid coordinates. The 
@@ -102,9 +98,7 @@ def centroid(grid, gw, initial=None, debug=False, verbose=False):
             - Updated the debug portion of scripts by adding plot and figure titles.
         Ver. 2.4: 8th August, 2013
             - Included a "verbose" flag to turn off diagnostic output to screen.    
-    '''
-    __author__ = "Tommy Le Blanc"
-    __version__ = "2.4"
+    """
     
     import logging
     
@@ -261,7 +255,7 @@ def bytescl(img, bottom, top):
 
 # *********************** readimage ***********************
 # Extract an image from a multi-ramp integration FITS file
-def readimage(infile):
+def readimage(infile, frame):
     '''
     ABOUT:
         Extract am image from a multi-ramp integration FITS file. Currently, JWST NIRSpec FITS
@@ -278,14 +272,16 @@ def readimage(infile):
         omega - A combined FITS image that compares the differenced 3-frame image (generating alpha, beta
             image frames), and selecting the lowest count pixel between the two.
 
-     HISTORY:
-        Ver. 1: May 2013
-            - Original function            
+    HISTORY:
+       * May 2013
+           - Original function
+       * Sept 2013
+           - Included a frame parameter to original function    
     '''
     
     # Read in input file, and generate the alpha and beta images
     # (for subtraction)
-    master = pf.getdata(infile, 1)
+    master = pf.getdata(infile, frame)
     alpha = master[1, :, :] - master[0, :, :]
     beta = master[2, :, :] - master[1, :, :]
     
@@ -317,8 +313,9 @@ def diff_image(im1, im2):
            of im1 and im2.
 
     HISTORY:
-        Ver. 1: May 2013
+       * May 2013
            - Original function
+
     '''
     
     # Subtract the min of im1 and im2 for im1
@@ -352,8 +349,6 @@ def a1600_pixtosky(angle_d, pixcrd, origin):
         Ver. 1.0: January 2013
             - Original function
     '''
-    __author__ = "Tommy Le Blanc"
-    __version__ = "1.0"
     
     # Import necessary modules
     import pywcs
