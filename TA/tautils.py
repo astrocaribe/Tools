@@ -4,13 +4,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pyfits as pf
 
+import logging
+import pywcs
+
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.2.1"
+__version__ = "1.2.2"
 
 # HISTORY
 #    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
-#                  Vr. 1.1: Changed/added features to centroid function
+#       Aug 2013   Vr. 1.1: Changed/added features to centroid function
+#                          - Optimized computation by summing over row/column 
+#                            in one go.
+#                          - Modified to include a smaller centroiding 
+#                            computation. An initial guess is computed over 
+#                            the entire NxN input grid, and then a tighter 
+#                            computation over a smaller nxn pixel grid is conducted.
+#                          - Included centroiding window edge detection when 
+#                            determining new computation window.
+#                          - Added a debug keyword for returning degub figures 
+#                            back to the main program for saving/viewing.
+#                          - Updated the debug portion of scripts by adding plot 
+#                            and figure titles.
+#                          - Included a "verbose" flag to turn off diagnostic 
+#                            output to screen.
 #    2. Sep 2013 - Vr. 1.2: 
 #                          - Added readimage function
 #                          - Added diff_image function
@@ -21,87 +38,61 @@ __version__ = "1.2.1"
 #                            for future compatibility.
 #    3. Sep 2013 - Vr. 1.2.1:
 #                          - Updated readimage to read from ext=1
+#    4. Oct 2013 - Vr. 1.2.2:
+#                          - Minor updates to doctrings for individual functions
+#                          - Updated readimage function to include a ext keyword
+#                            to choose which extension to load.
+
 
 # Utility definitions
 # *********************** centroid ***********************
 def centroid(grid, gw, initial=None, debug=False, verbose=False):
-    """ 
-        This function takes the input image grid, as well as a grid width 
-        (in pixel units) over which to do a final centroiding. An initial guess 
-        is executed over the entire input image, and then another centroiding is 
-        iterated given the initial computed guess. The final output is a rounded 
-        centroid coordinate (rounded to account for any loss of accuracy due to 
-        using floors throughout computation).
+    """
+    Perform a centroid on a given image.
+
+    This function takes the input image grid, as well as a grid width 
+    (in pixel units) over which to do a final centroiding. An initial guess 
+    is executed over the entire input image, and then another centroiding is 
+    iterated given the initial computed guess. The final output is a rounded 
+    centroid coordinate (rounded to account for any loss of accuracy due to 
+    using floors throughout computation).
 
     Keyword arguments:    
-    grid -- Image for which centrod is to be computed. For now, an NxN image
-            is required.
-    gw --   The grid width (in pixels) over which to compute the final centroid.
-            initial - The optional initial guess coordinates. If none is supplied, 
-            then the approximate center (+/- 1 px) is used. Note that the co-
-            ordinates are recognized in normal order (i.e, initial=[x,y]).
+    grid    -- Image for which centrod is to be computed. For now, an NxN image
+               is required.
+    gw      -- The grid width (in pixels) over which to compute the final centroid.
     initial -- An initial guess for targeted centroiding, in the form (x, y).
-               (default None).
-    debug -- Toggle debugging mode. Defaults to False, in which case no 
-             diagnostic image is produced or passed.
+               If none supplied, approximate image center is used. (default None).
+    debug   -- Toggle debugging mode. Defaults to False, in which case no 
+               diagnostic image is produced or passed.
 
-    OUTPUT(S):
-        centroid - The computed centroid coordinates. The 
-            final coordinates are relative to grid dimensions.
+    Output(s):
+    centroid -- The computed centroid coordinates. The final coordinates are 
+                relative to grid dimensions.
 
-        fig - diagnostic figure generated to troubleshoot the centroiding 
-            calculation. The figure contains 4 panels; i) the image (grid) for 
-            which centroiding is being calculated, ii), iii) the weights and 
-            weighted totals for x and y in grid, and iv) a scaled view of the 
-            image with final centroid (if updated from an initial calculation).
+    fig      -- Diagnostic figure generated to troubleshoot the centroiding 
+                calculation. Retured along with centroid if debug flag set.
 
-    USAGE:
+    Example uses:
         Can be used in one of two ways:
         1. Debug mode:
              
-             center, debugfig = centroid(img, cgw, debug=True)
+            >>  center, debugfig = centroid(img, gw, debug=True)
              
              In this mode, the centroiding algorithm will estimate an initial centroid
              of img, given a centroiding window cgw. Setting debug=True produces a 
              diagnostic figure that is passed (along with the centroid) to the calling 
              script; this figure can be captured and printed for analysis.
+        
         2. Centroid calculation mode:
              
-             center = centroid(img, cgw, initial=init)
+            >> center = centroid(img, gw, initial=init)
 
              In this mode, you can calculate a targeted centroid of img, given a 
              centroiding window cgw (of a few pixels), and an initial centroid guess. 
              The result is the calculated centroid for img in the form (x, y).
-
-    HISTORY:
-        Ver. 1.0: January 2013
-            - Original function; calculated weights and weighted averages by 
-            manually summing over row/columns.
-        Ver. 2.0: February 2013
-            - Optimizes computation by summing over row/column in one go.
-        Ver. 2.1: 12th February, 2013
-            - Modified to include a smaller centroiding computation. An 
-            initial guess is computed over the entire NxN input grid, and then a 
-            tighter computation over a smaller nxn pixel grid is conducted.
-            - Included centroiding window edge detection when determining 
-            new computation window
-        Ver. 2.2: 18th February, 2013
-            - Modified to include built in centroiding initial guessing by way
-            of an optional keyword; initial. Instead of including an initial 
-            guess mechanism, an "initial" keyword is added so that the function 
-            can be used to perform an initial guess, and re-running this function
-            with the initial guess will perform a more targeted cetroiding.
-        Ver. 2.3: 7th March, 2013
-            - Added a debug keyword for returning degub figures back to the main
-            program for saving/viewing.
-        Ver. 2.31: 7th August, 2013
-            - Updated the debug portion of scripts by adding plot and figure titles.
-        Ver. 2.4: 8th August, 2013
-            - Included a "verbose" flag to turn off diagnostic output to screen.    
     """
-    
-    import logging
-    
+        
     # Set the initial guess coordinates
     if initial == None: 
         if verbose: print("Initial Guess (x,y)...")
@@ -232,21 +223,19 @@ def centroid(grid, gw, initial=None, debug=False, verbose=False):
 
 # *********************** bytescl ***********************
 def bytescl(img, bottom, top):
-    '''
-    ABOUT:
-        This function scales a pixel image with arbitrary (bottom, top) limits,  and 
-        changes them to (0, 1), (i.e. - Changes the limit from bottom - top to 0 - 1).
+    """
+    Scale a pixel image to limits (0, 1).
 
-    INPUT:
-        bottom, top - Lower and upper limits of the original scale.
+    Keyword arguments:
+    img    -- Original pixel image.
+    bottom -- Lower limit of img.
+    top    -- Upper limit of img.
 
-    OUTPUT:
-        scl_img - Scaled image with new limits 0(min) - 1(max).
+    Output(s):
+    scl_img -- Scaled image with new limits 0(min) - 1(max).
 
-    HISTORY:
-        Ver. 1: January 2013
-            - Original function.    
-    '''
+    """
+
     scl_img = (((top - bottom) * (img - img.min())) / (img.max() - img.min())) + bottom
     
     return scl_img
@@ -255,33 +244,27 @@ def bytescl(img, bottom, top):
 
 # *********************** readimage ***********************
 # Extract an image from a multi-ramp integration FITS file
-def readimage(infile, frame):
-    '''
-    ABOUT:
-        Extract am image from a multi-ramp integration FITS file. Currently, JWST NIRSpec FITS
-        images consists of a 3-ramp integration, with each succesive image containing more photon
-        counts than the next. This meathod of reading/combining the images ensures the elimination
-        of cosmic rays that may occur in a few of the frames, as well (more importantly) reduce the
-        impact of hot pixels by chossing the minimum pixel count on a pixel by pixel basis.
+def readimage(infile, ext):
+    """
+    Extract am image from a multi-ramp integration FITS file.
 
-    INPUT(S):
-        infile - A multi-frame FITS image. In this case, a 3-frame image is expected as per test specs.
-                 **Note** The input image must be in ext=1 for this version to work.
+    Currently, JWST NIRSpec FITS images consists of a 3-ramp integration, 
+    with each succesive image containing more photon counts than the next. 
+    Uses a cube-differencing calculation to eliminate random measurements
+    such as cosmic rays.
 
-    OUTPUT(S):
-        omega - A combined FITS image that compares the differenced 3-frame image (generating alpha, beta
-            image frames), and selecting the lowest count pixel between the two.
+    Keyword arguments:
+    infile -- A multi-frame FITS image filename.
+    ext    -- Extension to load.
 
-    HISTORY:
-       * May 2013
-           - Original function
-       * Sept 2013
-           - Included a frame parameter to original function    
-    '''
+    Output(s):
+    omega -- A combined FITS image that combines all frames into one image.
+
+    """
     
     # Read in input file, and generate the alpha and beta images
     # (for subtraction)
-    master = pf.getdata(infile, frame)
+    master = pf.getdata(infile, ext)
     alpha = master[1, :, :] - master[0, :, :]
     beta = master[2, :, :] - master[1, :, :]
     
@@ -299,24 +282,22 @@ def readimage(infile, frame):
 # *********************** diff_image ***********************
 # New method for conducting image differencing
 def diff_image(im1, im2):
-    '''
-    ABOUT: 
-           This function takes as input the images to be subtracted,
-           and output the final subtracted image. The order in which
-           the input images are input is important; the 2nd will be 
-           subtracted from the first.
-    INPUT:
-           im1, im2 - The images for which differencing is to be 
-           perfomred.
-    OUTPUT: 
-           output_im - Final difference image. Dimensions match that
-           of im1 and im2.
+    """
+    Subtract im2 from im1, returning an image with the lowest pixel count 
+    between im1 and im2.
 
-    HISTORY:
-       * May 2013
-           - Original function
+    This function takes as input the images to be subtracted,
+    and output the final subtracted image. The order in which
+    the input images are input is important; the 2nd will be 
+    subtracted from the first.
+    
+    Keyword arguments:
+    im1, im2 -- The images for which differencing is to be perfomred.
+    
+    Output(s): 
+    output_im -- Final difference image.
 
-    '''
+    """
     
     # Subtract the min of im1 and im2 for im1
     output_im = im1 - np.where(im1 < im2, im1, im2)
@@ -328,31 +309,25 @@ def diff_image(im1, im2):
 
 # *********************** a1600_pixtosky ***********************
 def a1600_pixtosky(angle_d, pixcrd, origin):
-    '''
-    ABOUT: 
-        This function converts input pixels coordinates into sky coordinates for 
-        the A1600 aperture on the NIRSpec MSA.
+    """
+    Convert input pixel coordinates to sky coordinates for NIRSpec 
+    A1600 aperture.
 
-    INPUT:
-        angle - The rotation angle between the aperture grid and the sky coordinates, 
-                in degrees.
+    Keyword arguments:
+    angle_d -- Degree angle rotation between the aperture grid and 
+               the sky coordinates.
+    pixcrd  -- Pixel coordinates to be converted. Can be a single 
+               coordinate in the form (x_pix, y_pix), or a numpy 
+               array of coordinates.
+    origin  -- Origin of the target coordinate system.
 
-        (x_pix, y_pix) - The pixel coordinate that needs to be converted. This can
-            be a single coordinate, or a numpy array of coordinates.
+    Output(s):
+    world - Computed sky coordinates, rounded to nearest 1. The 
+            final coordinates are relative to grid dimensions. 
+            Output dimensions match those of input. 
 
-    OUTPUT:
-        (x_sky, y_sky) - The computed centroid coordinates, rounded to nearest 1. The 
-            final coordinates are relative to grid dimensions. Same length as 
-            (x_pix, y_pix) above.
-
-    HISTORY:
-        Ver. 1.0: January 2013
-            - Original function
-    '''
-    
-    # Import necessary modules
-    import pywcs
-    
+    """
+        
     # Change angle from degrees to radians
     angle_r = np.radians(angle_d)
     
@@ -366,34 +341,27 @@ def a1600_pixtosky(angle_d, pixcrd, origin):
     wcs.wcs.pc = ([np.sin(angle_r),np.cos(angle_r)],
                   [np.cos(angle_r),-np.sin(angle_r)])
 
-
     # Calculate new coordinates for each pair of input coordinates
-    world = wcs.wcs_pix2sky(pixcrd, origin)
+    sky_coords = wcs.wcs_pix2sky(pixcrd, origin)
     
-    return world
+    return sky_coords
 # *********************** a1600_pixtosky ***********************
 
 
 # *********************** ta_transform ***********************
 def ta_transform(pnts, mirror=False):
-    '''
-    ABOUT: 
-           This function transforms extracted pixel positions to sky
-           in x-y space. For this application, a mirror along the 
-           aperture "horizaontal" is included (using the 'Mirror'
-           keyword) to correctly represent the converted coordinates. 
-    INPUT:
-           pnts - A list of pixel coordinates. Can be only one pair, 
-                  or several.
-    OUTPUT: 
-           transformed_pnts - Transformed pixel coordinates, in sky.
+    """
+    Transforms an array of pixel positions into sky positions in a 
+    2D plane.
+    
+    Keyword arguments:
+    pnts   -- Array of pixel coordinates.
+    mirror -- Flag to allow mirroring along a specific plane (default=False).
 
-     HISTORY:
-         Ver.1: May 2013
-             - Original function
-    '''
-    # Import necessary modules
-    import numpy as np
+    Output(s):
+    transformed_pnts - Transformed pixel coordinates, in sky coordinates.
+
+    """
 
     # Function constants
     
@@ -453,24 +421,17 @@ def ta_transform(pnts, mirror=False):
 
 # *********************** Rotate2D ***********************
 def Rotate2D(pts,cnt,angle):
-    '''
-    ABOUT:
-        Rotates a set of points in 2D space around a center point.
+    """
+    Rotates a set of points in 2D space around a center point.
     
-    INPUT(S):
-        pts - A set/list of points that need to be rotated.
-        cnt - The center of rotation. Coordinate in the form of (x, y) expected.
-        angle - The angle of rotation that needs to be computed, in radians.
+    pts   -- Array of points to be rotated.
+    cnt   -- Center of rotation. Coordinate in the form of (x, y) expected.
+    angle -- Radian angle of rotation.
 
-    OUTPUT(S):
-        rot_pts - The resulting points after rotation has been calculated.
+    Output(s):
+    rot_pts -- Rotated coordinate pairs.
 
-    HISTORY:
-        Ver. 1: Jan 2013
-            - Original function
-    '''
-
-    import numpy as np
+    """
     
     ang = np.deg2rad(angle)
     
@@ -480,6 +441,5 @@ def Rotate2D(pts,cnt,angle):
 
 
 
-
-# Print diagnostic message
+# Print diagnostic load message
 print("(tautils): TA Utilities Version {} loaded!".format(__version__))
