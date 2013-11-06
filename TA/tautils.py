@@ -9,7 +9,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.2.2"
+__version__ = "1.2.3"
 
 # HISTORY
 #    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
@@ -42,7 +42,11 @@ __version__ = "1.2.2"
 #                          - Minor updates to doctrings for individual functions
 #                          - Updated readimage function to include a ext keyword
 #                            to choose which extension to load.
-
+#    5. Nov 2013 - Vr. 1.2.3:
+#                          - Added get_filenames function
+#                          - Added zero_correct function
+#                          - Added display_ns_image function
+#                          - Added e_dist function
 
 # Utility definitions
 # *********************** centroid ***********************
@@ -305,6 +309,78 @@ def diff_image(im1, im2):
     return output_im
 # *********************** diff_image ***********************
 
+
+# *********************** get_filenames ***********************
+def get_filenames(search_str, path):
+    """ 
+    Retunn a list of filenames in a certain criteria given
+    a path.
+    """
+
+    import os, re
+        
+    file_list = []
+    
+    filenames = os.listdir(path)
+    
+    for ii in xrange(len(filenames)):
+        step = re.search(search_str, filenames[ii])
+        if step != None:
+            file_list.append(path+step.group(0))
+
+    return file_list
+# *********************** get_filenames ***********************
+
+
+# *********************** zero_correct ***********************
+def zero_correct(dim_over, dim_detc):
+    """
+    This short function calculates the correction for the change 
+    in the location of the origin pixel (the very first, or "0"), 
+    which is applied to the calculation of centroid computed for 
+    a grid that has been downsampled.
+    """
+    
+    factor = dim_over / dim_detc
+    corr = factor / 2. - 0.5
+    
+    return corr/factor
+# *********************** zero_correct ***********************
+
+
+# *********************** display_ns_psf ***********************
+def display_ns_psf(image, vlim=(), interp='nearest', cmap='gray', cb=False, save=False):
+    """
+    Custom display a PSF generated with WEBBPSF or similar tool.
+    """
+
+    # Display PSF (oversampled and detector levels)
+    fig, ax = plt.subplots(figsize=(8, 8))
+    ax.set_aspect('equal')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+
+    if vlim == ():
+        vlim = (image.min(), image.max())
+         
+    cax = ax.imshow(image, cmap=cmap, interpolation=interp, vmin=vlim[0], vmax=vlim[1])
+    if cb: fig.colorbar(cax, ax=ax, shrink=0.8)
+    
+    if save:
+        fig.savefig('display_ns_psf.pdf')
+# *********************** display_ns_psf ***********************
+
+
+# *********************** e_dist ***********************
+def e_dist(xa, xb):
+    """
+    Calculate the euclidian distance between two cartesian points
+    """
+    
+    distance = np.sqrt((xa[0]-xb[0])**2 + (xa[1]-xb[1])**2)
+
+    return distance
+# *********************** e_dist ***********************
 
 
 # *********************** a1600_pixtosky ***********************
