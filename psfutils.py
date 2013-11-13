@@ -193,10 +193,9 @@ def gen_central_thrumap(infile, wavelength, lvls, s_path):
     # Extract and plot throughput max
     t_max = np.where(x == x.max().astype(np.float64))
     max_x, max_y = t_max[1][0], t_max[0][0]
-    #print('Max point of {} at [{}, {}]'.format(x.max(), max_x, max_y))
     ax = plt.plot(max_x, max_y, marker='+', ms=10, mfc='black', mec='black')
 
-    cnt = plt.contour(x, colors='black', linewidths=.5, levels=lvls)#, vmin=abs(x).min(), vmax=abs(x).max())
+    cnt = plt.contour(x, colors='black', linewidths=.5, levels=lvls)
     plt.clabel(cnt, fontsize=8)
 
     fig.savefig(s_path+'/Images2D/ThruMap_{}.jpg'.format(wavelength))
@@ -267,7 +266,7 @@ def gen_3x3_thrumap(infile, wavelength, lvls, s_path):
         for column in xrange(3):
         
             x = cube[:, 3-row, 3-column].reshape(21,21)
-            im = grid[axisNum].contourf(x, cmap=cmap, antialiased=False, levels=lvls)#, vmin=0.00, vmax=0.7, alpha=0.8)
+            im = grid[axisNum].contourf(x, cmap=cmap, antialiased=False, levels=lvls)
             grid[axisNum].text(10,10,axisNum, color='white')
             axisNum += 1
 
