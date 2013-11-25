@@ -281,7 +281,7 @@ def readimage(master_img):
     # between alpha and beta images, storing lower value
     omega = np.where(alpha < beta, alpha, beta)
      
-    print('(readimage): Image {} read ...'.format(infile))
+    print('(readimage): Image processed!')
         
     # Return the extracted image
     return omega
