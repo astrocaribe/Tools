@@ -2,14 +2,14 @@
 from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
-import pyfits as pf
+from astropy.io import fits
 
 import logging
 import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.2.3"
+__version__ = "1.2.4"
 
 # HISTORY
 #    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
@@ -47,6 +47,9 @@ __version__ = "1.2.3"
 #                          - Added zero_correct function
 #                          - Added display_ns_image function
 #                          - Added e_dist function
+#    6. Nov 2013 - Vr. 1.2.4:
+#                          - Minor update to pyfits; using astropy.io.fits instead
+#                            of pyfits
 
 # Utility definitions
 # *********************** centroid ***********************
@@ -268,7 +271,7 @@ def readimage(infile, ext):
     
     # Read in input file, and generate the alpha and beta images
     # (for subtraction)
-    master = pf.getdata(infile, ext)
+    master = fits.getdata(infile, ext)
     alpha = master[1, :, :] - master[0, :, :]
     beta = master[2, :, :] - master[1, :, :]
     
