@@ -50,7 +50,11 @@ __version__ = "1.2.4"
 #    6. Nov 2013 - Vr. 1.2.4:
 #                          - Minor update to pyfits; using astropy.io.fits instead
 #                            of pyfits
-
+#                          - Changed the readimage() function to accept a 3-frame
+#                            image instead of an input file and extension. Makes it
+#                            easier to use by not requiring a read and then analysis
+#                            within the function.
+#
 # Utility definitions
 # *********************** centroid ***********************
 def centroid(grid, gw, initial=None, debug=False, verbose=False):
@@ -251,7 +255,7 @@ def bytescl(img, bottom, top):
 
 # *********************** readimage ***********************
 # Extract an image from a multi-ramp integration FITS file
-def readimage(infile, ext):
+def readimage(master_img):
     """
     Extract am image from a multi-ramp integration FITS file.
 
@@ -261,8 +265,7 @@ def readimage(infile, ext):
     such as cosmic rays.
 
     Keyword arguments:
-    infile -- A multi-frame FITS image filename.
-    ext    -- Extension to load.
+    master_img -- 3-frame image (as per NIRSpec output images)
 
     Output(s):
     omega -- A combined FITS image that combines all frames into one image.
@@ -271,9 +274,8 @@ def readimage(infile, ext):
     
     # Read in input file, and generate the alpha and beta images
     # (for subtraction)
-    master = fits.getdata(infile, ext)
-    alpha = master[1, :, :] - master[0, :, :]
-    beta = master[2, :, :] - master[1, :, :]
+    alpha = master_img[1, :, :] - master_img[0, :, :]
+    beta = master_img[2, :, :] - master_img[1, :, :]
     
     # Generate a final image by doing a pixel to pixel check 
     # between alpha and beta images, storing lower value
