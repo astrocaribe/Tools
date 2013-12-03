@@ -9,7 +9,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.2.4"
+__version__ = "1.3"
 
 # HISTORY
 #    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
@@ -354,13 +354,29 @@ def zero_correct(dim_over, dim_detc):
 
 
 # *********************** display_ns_psf ***********************
-def display_ns_psf(image, vlim=(), interp='nearest', cmap='gray', cb=False, save=False):
+def display_ns_psf(image, vlim=(), fsize=(8, 8), interp='nearest', \
+    title='', cmap='gray', cb=False, save=False):
     """
     Custom display a PSF generated with WEBBPSF or similar tool.
+
+    A quick tool for displaying NIRSpec images in native size 
+    (2048x2048) with additional options for display.
+
+    Keyword arguments:
+    image   --  A 2D image to display
+    vlim    --  The image range (in terms of image counts) to display.
+                Defaults to empty (), displaying full spectrum.
+    fsize   --  Figure image size (in cm?)
+    interp  --  Interpolation type. Defaults to 'nearest'.
+    title   --  Title for plot. Defaults to ''.
+    cmap    --  Color map for plot. Defaults to 'gray'.
+    cb      --  Color bar toggle. Defaults to 'False'.
+    save    --  Figure save toggle. Defaults to 'False'.
     """
 
     # Display PSF (oversampled and detector levels)
-    fig, ax = plt.subplots(figsize=(8, 8))
+    fig, ax = plt.subplots(figsize=fsize)
+    ax.set_title(title)
     ax.set_aspect('equal')
     ax.set_xlabel('x')
     ax.set_ylabel('y')
