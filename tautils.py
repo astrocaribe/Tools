@@ -441,7 +441,6 @@ def gen_superdark(inlist, fname='./Superdark.fits'):
     
     # Save the above information to a FITS file for later use
     hdu = fits.PrimaryHDU()
-    print()
     print('(gen_superdark): Writing {} to file ...'.format(fname))
     hdu.header.append('FILENAME', fname, '')
     hdu.writeto(fname, clobber=True)
