@@ -3,6 +3,7 @@ from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 from astropy.io import fits
+from os import path
 
 import logging
 import pywcs
