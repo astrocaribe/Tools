@@ -9,7 +9,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.3"
+__version__ = "1.4"
 
 # HISTORY
 #    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
@@ -47,13 +47,15 @@ __version__ = "1.3"
 #                          - Added zero_correct function
 #                          - Added display_ns_image function
 #                          - Added e_dist function
-#    6. Nov 2013 - Vr. 1.2.4:
+#    6. Dec 2013 - Vr. 1.3:
 #                          - Minor update to pyfits; using astropy.io.fits instead
 #                            of pyfits
 #                          - Changed the readimage() function to accept a 3-frame
 #                            image instead of an input file and extension. Makes it
 #                            easier to use by not requiring a read and then analysis
 #                            within the function.
+#    7. Dec 2013 - Vr. 1.4:
+#                          - New function: gen_superdark
 #
 # Utility definitions
 # *********************** centroid ***********************
@@ -318,7 +320,7 @@ def diff_image(im1, im2):
 # *********************** get_filenames ***********************
 def get_filenames(search_str, path):
     """ 
-    Retunn a list of filenames in a certain criteria given
+    Return a list of filenames in a certain criteria given
     a path.
     """
 
@@ -402,6 +404,51 @@ def e_dist(xa, xb):
 
     return distance
 # *********************** e_dist ***********************
+
+
+# *********************** gen_superdark ***********************
+def gen_superdark(inlist, fname='./Superdark.fits'):
+    '''
+    Generate a median image from a list of input image files.
+    
+    The purpose of this script is to generate a "superdark";
+    a median dark multi-frame image to mimic the noise present
+    in NIRSpec-read images.
+    
+    The median (average) calculation is done across the 3-frame
+    images expected from NIRSpec, and is more accurate as more
+    images are used.
+    
+    Keyword arguments:
+    inlist -- The list of image files to be used for generating
+              the median image.
+    fname  -- The name of the generated meadian image. Defaults
+              to 'Superdark'.
+    '''
+    
+    stacked_darks = 0
+    
+    # Read in the multiframe images and create a stack
+    for ii in xrange(len(inlist)):
+        fileBase = path.basename(inlist[ii])
+        print('(gen_superdark): Reading/processing {} ...'.format(fileBase))
+        
+        stacked_darks = stacked_darks + fits.getdata(inlist[ii], 0)
+    
+    # Create a superdark frame initiazed with zeros
+    superdark_frame = stacked_darks / len(inlist)
+    
+    # Save the above information to a FITS file for later use
+    hdu = fits.PrimaryHDU()
+    print()
+    print('(gen_superdark): Writing {} to file ...'.format(fname))
+    hdu.header.append('FILENAME', fname, '')
+    hdu.writeto(fname, clobber=True)
+
+    fits.append(fname, superdark_frame)
+        
+    return superdark_frame
+# *********************** gen_superdark ***********************
 
 
 # *********************** a1600_pixtosky ***********************
