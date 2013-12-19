@@ -10,7 +10,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.4"
+__version__ = "1.4.1"
 
 # HISTORY
 #    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
@@ -57,6 +57,8 @@ __version__ = "1.4"
 #                            within the function.
 #    7. Dec 2013 - Vr. 1.4:
 #                          - New function: gen_superdark
+#    8. Dec 2013 - Vr. 1.4.1:
+#                          - Minor updates to Rotate2D
 #
 # Utility definitions
 # *********************** centroid ***********************
@@ -569,7 +571,7 @@ def Rotate2D(pts,cnt,angle):
     Rotates a set of points in 2D space around a center point.
     
     pts   -- Array of points to be rotated.
-    cnt   -- Center of rotation. Coordinate in the form of (x, y) expected.
+    cnt   -- Center of rotation. Coordinate in the form of (y, x) expected.
     angle -- Radian angle of rotation.
 
     Output(s):
@@ -579,7 +581,11 @@ def Rotate2D(pts,cnt,angle):
     
     ang = np.deg2rad(angle)
     
+    #Includes rotation and reflection along x=y
     rot_pts = np.dot(pts-cnt,np.array([[np.sin(ang),np.cos(ang)],[np.cos(ang),np.sin(-ang)]]))+cnt
+    
+    #rot_pts = np.dot(pts-cnt,np.array([[np.cos(ang),np.sin(ang)],[np.sin(-ang),np.cos(ang)]]))+cnt
+
     return rot_pts
 # *********************** Rotate2D ***********************
 
