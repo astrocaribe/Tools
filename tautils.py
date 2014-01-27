@@ -10,7 +10,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.4.2"
+__version__ = "1.4.3"
 
 # HISTORY
 #    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
@@ -63,7 +63,9 @@ __version__ = "1.4.2"
 #                          - Minor update to centroid function. Initial search 
 #                            coords introduced a bias to final centroid (by the 
 #                            initial coord fraction). Updated to change init coords 
-#                            to whole pixel number with np.floor(). 
+#                            to whole pixel number with np.floor().
+#   10. Jan 2014 - Vr. 1.4.3:
+#                          - Minor indexing error for centroiding (grid) window fixed.
 #
 # Utility definitions
 # *********************** centroid ***********************
@@ -131,9 +133,9 @@ def centroid(grid, gw, initial=None, debug=False, verbose=False):
     
     # Define centroiding limits based on input grid width
     # specifications (grid width x/y lower and upper limits)
-    gw_xl = init_guess[0] - (gw/2)
+    gw_xl = init_guess[0] - (gw/2) + 1
     gw_xu = gw_xl + gw - 1
-    gw_yl = init_guess[1] - (gw/2)
+    gw_yl = init_guess[1] - (gw/2) + 1
     gw_yu = gw_yl + gw - 1
 
     
