@@ -10,7 +10,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.4.1"
+__version__ = "1.4.2"
 
 # HISTORY
 #    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
@@ -59,6 +59,11 @@ __version__ = "1.4.1"
 #                          - New function: gen_superdark
 #    8. Dec 2013 - Vr. 1.4.1:
 #                          - Minor updates to Rotate2D
+#    9. Jan 2014 - Vr. 1.4.2:
+#                          - Minor update to centroid function. Initial search 
+#                            coords introduced a bias to final centroid (by the 
+#                            initial coord fraction). Updated to change init coords 
+#                            to whole pixel number with np.floor(). 
 #
 # Utility definitions
 # *********************** centroid ***********************
@@ -115,8 +120,10 @@ def centroid(grid, gw, initial=None, debug=False, verbose=False):
         init_guess = ((grid.shape[1]/2) - 1, (grid.shape[0]/2) - 1)
     else:
         if verbose: print("Centroid...")
-        init_guess = initial #(initial[1], initial[0])
-        
+        init_guess = initial
+
+    # Ensure that initial guess coordinates are whooe pixel numbers
+    init_guess = np.floor(init_guess)
     if verbose: print("(centroid) Centroid Search Position: ({:.2f}, {:.2f})".format(init_guess[0], init_guess[1]))    
     
 
