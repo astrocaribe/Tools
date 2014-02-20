@@ -12,7 +12,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 # HISTORY
 #    1. Nov 2013 - Vr. 1.0: Added initial PSF tools
@@ -143,7 +143,7 @@ def mask_image(x, y, c, image, verbose=False):
 
 
 # *********************** gen_central_thrumap ***********************
-def gen_central_thrumap(infile, wavelength, lvls, s_path):
+def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infile=False):
     """
     Generate a throughput map of the central shutter (from a 5x5 config).
 
@@ -153,31 +153,47 @@ def gen_central_thrumap(infile, wavelength, lvls, s_path):
     21 x and y dithers of a psf within the central shutter.
 
     Keyword arguments:
-    infile     -- Central MSA pointing coordinates
+    d_cube     -- Thruput datacube
     wavelength -- Wavelength over which the map is being generated
     lvls       -- The contour levels to plot
     s_path     -- The save path for the generated map
+    infile     -- File containing the thruput datacube (Optional). If set, 
+                  d_cube is ignored
 
     Output(s):
     fig        -- The generated throughput map figure
 
     Example use:
 
-        >>    psfutils.gen_central_thrumap('datacube.fits', 2.1, lvls=[0, 25, 50, 100],
+    1.    >>    psfutils.gen_central_thrumap(thruput_cube, 2.1, lvls=[0, 25, 50, 100],
                                      s_path='./Maps')
 
         Generates a throughput contour map of the central shutter using the input 
         file datacube.fits of a psf generated at 2.1 µm, with contour levels at 
         0, 25, 50, and 100. The map is stored in './Maps'.
-    """
-    
-    # Read in throughput cube
-    hdu = pf.open(infile)
-    steps = hdu[0].header['NSTEP']
-    cube = hdu[1].data.astype(np.float64)
 
-    # Reshape the central shutter values into 2 dimensions
-    x = cube[:, 2, 2].reshape(steps,steps)
+    2.    >>    psfutils.gen_central_thrumap(thruput_cube, 2.1, lvls=[0, 25, 50, 100],
+                                     s_path='./Maps', infile='datacube.fits')
+
+        Generates a throughput contour map of the central shutter using the input 
+        file datacube.fits of a psf generated at 2.1 µm, with contour levels at 
+        0, 25, 50, and 100. The map is stored in './Maps'. Even though a thruput_cube 
+        has been passed, it is ignored because an input file was included.
+
+    """
+
+    if infile:
+        # Read in throughput cube
+        hdu = pf.open(infile)
+        steps = hdu[0].header['NSTEP']
+        cube = hdu[1].data.astype(np.float64)
+        hdu.close()
+
+        # Reshape the central shutter values into 2 dimensions
+        x = cube[:, 2, 2].reshape(steps,steps)
+    else:
+        steps = np.sqrt(d_cube.shape[0]).astype(np.int)
+        x = d_cube[:, 2, 2].reshape(steps,steps)
 
     # Central shutter representation
     fig, ax = plt.subplots(figsize=(5,8))
@@ -198,12 +214,10 @@ def gen_central_thrumap(infile, wavelength, lvls, s_path):
     cnt = plt.contour(x, colors='black', linewidths=.5, levels=lvls)
     plt.clabel(cnt, fontsize=8)
 
-    fig.savefig(s_path+'/Images2D/ThruMap_{}.jpg'.format(wavelength))
-    
+    fig.savefig(outfile)
+
     print('MSA Central Shutter Throughput Map ({} µm) done ...'.format(wavelength))
 
-    hdu.close()
-    
     return fig
 # *********************** gen_central_thrumap ***********************
 
