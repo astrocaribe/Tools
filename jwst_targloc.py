@@ -574,4 +574,4 @@ def find1D_higher_moments(image, xcen, xhw, c_sum):
 
 
 # Print diagnostic load message
-print("(tautils): JWST Target Locate Utilities Version {} loaded!".format(__version__))
+print("(jwst_targloc): JWST Target Locate Utilities Version {} loaded!".format(__version__))
