@@ -10,7 +10,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.4.3"
+__version__ = "1.4.4"
 
 # HISTORY
 #    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
@@ -408,8 +408,8 @@ def display_ns_psf(image, vlim=(), fsize=(8, 8), interp='nearest', \
     cax = ax.imshow(image, cmap=cmap, interpolation=interp, vmin=vlim[0], vmax=vlim[1])
     if cb: fig.colorbar(cax, ax=ax, shrink=0.8)
     
-    if save:
-        fig.savefig(save)
+    if savefile:
+        fig.savefig(savefile)
 # *********************** display_ns_psf ***********************
 
 
