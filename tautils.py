@@ -66,6 +66,11 @@ __version__ = "1.4.3"
 #                            to whole pixel number with np.floor().
 #   10. Jan 2014 - Vr. 1.4.3:
 #                          - Minor indexing error for centroiding (grid) window fixed.
+#   11. Feb 2014 - Vr. 1.4.4:
+#                          - Changed save input parameter to savefile in display_psf.
+#                            Added the ability to pass filename (including dir 
+#                            structure) for saving the resulting plot. Still defaults
+#                            to False if parameter not passed.
 #
 # Utility definitions
 # *********************** centroid ***********************
@@ -369,7 +374,7 @@ def zero_correct(dim_over, dim_detc):
 
 # *********************** display_ns_psf ***********************
 def display_ns_psf(image, vlim=(), fsize=(8, 8), interp='nearest', \
-    title='', cmap='gray', cb=False, save=False):
+    title='', cmap='gray', cb=False, savefile=False):
     """
     Custom display a PSF generated with WEBBPSF or similar tool.
 
@@ -377,15 +382,17 @@ def display_ns_psf(image, vlim=(), fsize=(8, 8), interp='nearest', \
     (2048x2048) with additional options for display.
 
     Keyword arguments:
-    image   --  A 2D image to display
-    vlim    --  The image range (in terms of image counts) to display.
-                Defaults to empty (), displaying full spectrum.
-    fsize   --  Figure image size (in cm?)
-    interp  --  Interpolation type. Defaults to 'nearest'.
-    title   --  Title for plot. Defaults to ''.
-    cmap    --  Color map for plot. Defaults to 'gray'.
-    cb      --  Color bar toggle. Defaults to 'False'.
-    save    --  Figure save toggle. Defaults to 'False'.
+    image    --  A 2D image to display
+    vlim     --  The image range (in terms of image counts) to display.
+                 Defaults to empty (), displaying full spectrum.
+    fsize    --  Figure image size (in cm?)
+    interp   --  Interpolation type. Defaults to 'nearest'.
+    title    --  Title for plot. Defaults to ''.
+    cmap     --  Color map for plot. Defaults to 'gray'.
+    cb       --  Color bar toggle. Defaults to 'False'.
+    savefile --  Figure save toggle. Defaults to 'False'. A filename
+                 (with directory structure) can be entered to save to
+                 given filename.
     """
 
     # Display PSF (oversampled and detector levels)
@@ -402,7 +409,7 @@ def display_ns_psf(image, vlim=(), fsize=(8, 8), interp='nearest', \
     if cb: fig.colorbar(cax, ax=ax, shrink=0.8)
     
     if save:
-        fig.savefig('display_ns_psf.pdf')
+        fig.savefig(save)
 # *********************** display_ns_psf ***********************
 
 
