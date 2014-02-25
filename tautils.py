@@ -409,7 +409,7 @@ def display_ns_psf(image, vlim=(), fsize=(8, 8), interp='nearest', \
     if vlim == ():
         vlim = (image.min(), image.max())
     
-    if extent.any():     
+    if extent is not None:     
         cax = ax.imshow(image, cmap=cmap, interpolation=interp, vmin=vlim[0], \
               extent=extent-.5, vmax=vlim[1])
     else:
