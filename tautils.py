@@ -10,7 +10,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.4.4"
+__version__ = "1.4.5"
 
 # HISTORY
 #    1. Jan 2013 - Vr. 1.0: Added initial versions of centroid and bytescl
@@ -71,6 +71,10 @@ __version__ = "1.4.4"
 #                            Added the ability to pass filename (including dir 
 #                            structure) for saving the resulting plot. Still defaults
 #                            to False if parameter not passed.
+#   12. Feb 2014 - Vr. 1.4.5:
+#                          - Added the ability to make axes actual pixel values using
+#                            the extent keyword. Shifts axes .5 pixel to make pixel 
+#                            center origin.
 #
 # Utility definitions
 # *********************** centroid ***********************
@@ -374,7 +378,7 @@ def zero_correct(dim_over, dim_detc):
 
 # *********************** display_ns_psf ***********************
 def display_ns_psf(image, vlim=(), fsize=(8, 8), interp='nearest', \
-    title='', cmap='gray', cb=False, savefile=False):
+    title='', cmap='gray', extent=None, cb=False, savefile=False):
     """
     Custom display a PSF generated with WEBBPSF or similar tool.
 
@@ -404,8 +408,13 @@ def display_ns_psf(image, vlim=(), fsize=(8, 8), interp='nearest', \
 
     if vlim == ():
         vlim = (image.min(), image.max())
-         
-    cax = ax.imshow(image, cmap=cmap, interpolation=interp, vmin=vlim[0], vmax=vlim[1])
+    
+    if extent.any():     
+        cax = ax.imshow(image, cmap=cmap, interpolation=interp, vmin=vlim[0], \
+              extent=extent-.5, vmax=vlim[1])
+    else:
+        cax = ax.imshow(image, cmap=cmap, interpolation=interp, vmin=vlim[0], vmax=vlim[1])       
+    
     if cb: fig.colorbar(cax, ax=ax, shrink=0.8)
     
     if savefile:
