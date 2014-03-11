@@ -12,7 +12,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 
 # HISTORY
 #    1. Nov 2013 - Vr. 1.0: Added initial PSF tools
@@ -143,7 +143,7 @@ def mask_image(x, y, c, image, verbose=False):
 
 
 # *********************** gen_central_thrumap ***********************
-def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infile=False):
+def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infile=False, grid=False):
     """
     Generate a throughput map of the central shutter (from a 5x5 config).
 
@@ -159,6 +159,8 @@ def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infil
     s_path     -- The save path for the generated map
     infile     -- File containing the thruput datacube (Optional). If set, 
                   d_cube is ignored
+    grid       -- Include/exclude a grid over the map (Optional). If set, grid is
+                  drawn.
 
     Output(s):
     fig        -- The generated throughput map figure
@@ -200,6 +202,9 @@ def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infil
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_title('MSA Shutter Throughput Map ({} $\mu m$)'.format(wavelength))
+
+    # If grid keyword set, include a grid layout over plot
+    if grid: ax.grid(axis='both', which='both')
 
     cmap = cm.get_cmap('jet', 20)    # 20 discrete colors
 
