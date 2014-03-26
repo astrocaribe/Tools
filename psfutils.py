@@ -70,7 +70,7 @@ def mask_image(x, y, c, image, verbose=False):
     # MSA shutter width, height, and grid width
     # Dimensions are for 10X oversampled pixels, each = 0.01"
     #dx, dy, gridwidth = 20, 40, 6
-    dx, dy, gridwidth = 21, 45, 6
+    dx, dy, gridwidth = 20, 45, 6
     print('Shutter dimensions: ', dx, dy, gridwidth)
 
 
