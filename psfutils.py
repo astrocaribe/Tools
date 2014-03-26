@@ -12,7 +12,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 
 # HISTORY
 #    1. Nov 2013 - Vr. 1.0: Added initial PSF tools
@@ -21,7 +21,19 @@ __version__ = "1.0.3"
 #                          - Added gen_3x3_thrumap function
 #                  Vr. 1.0.1: Minor updates to gen_central)thrumap and
 #                             gen_3x3_thrumap functions
-
+#    2. Feb 2014 - Vr. 1.0.2: Updates to gen_central_thrumap
+#                          - Include either an input filename or a 
+#                            numpy datacube in input call
+#                          - Changed s_path to outfile to include path 
+#                            info as well as filename
+#    3. Mar 2014 - Vr. 1.0.3: Minor updates to gen_central_thrumap
+#                          - Included an option to display a grid 
+#                            pattern on map
+#    4. Mar 2014 - Vr. 1.0.4: Minor updates to mask_image()
+#                          - Updated shutter dimensions as per latest
+#                            NIRSpec OCD
+#                          - Updated calculation of 5x5 shutter mask 
+#                            dimensions for subsequent computations.
 
 # Utility definitions
 # *********************** mask_psf ***********************
@@ -57,7 +69,9 @@ def mask_image(x, y, c, image, verbose=False):
 
     # MSA shutter width, height, and grid width
     # Dimensions are for 10X oversampled pixels, each = 0.01"
-    dx, dy, gridwidth = 20, 40, 6
+    #dx, dy, gridwidth = 20, 40, 6
+    dx, dy, gridwidth = 21, 45, 6
+    print('Shutter dimensions: ', dx, dy, gridwidth)
 
 
     # Locate pointing center based on input x and y centering parameters
@@ -72,10 +86,13 @@ def mask_image(x, y, c, image, verbose=False):
     msa_mask = np.ones(image.shape)
             
     # Calculate dimensions (in pixels) of a 5 x 5 MSA shutter array
-    xstart = centerx - (136/2.)   #x dim of MSA = 136px
-    xu = centerx + (136/2.) 
-    ystart = centery - (236/2.)   # ydim of MSA = 236px
-    yu = centery + (236/2.)
+    x_shutter_dim = (gridwidth*6) + (dx*5)
+    y_shutter_dim = (gridwidth*6) + (dy*5)
+
+    xstart = centerx - (x_shutter_dim/2.)   #x dim of MSA
+    xu = centerx + (x_shutter_dim/2.) 
+    ystart = centery - (y_shutter_dim/2.)   #y dim of MSA
+    yu = centery + (y_shutter_dim/2.)
 
     # Preserve the x and y MSA start coordinates (Find a better way!)
     # Also store the x and y start/end positions for each cell in the
