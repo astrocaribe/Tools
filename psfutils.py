@@ -12,7 +12,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 
 # HISTORY
 #    1. Nov 2013 - Vr. 1.0: Added initial PSF tools
@@ -34,6 +34,10 @@ __version__ = "1.0.4"
 #                            NIRSpec OCD
 #                          - Updated calculation of 5x5 shutter mask 
 #                            dimensions for subsequent computations.
+#    5. Apr 2014 - Vr. 1.0.5: Update to gen_central_thrumap()
+#                          - Added the ability to turn on normalization
+#                            of the input throughput grid
+#                          - Changed contour levels min/max
 
 # Utility definitions
 # *********************** mask_psf ***********************
@@ -71,7 +75,7 @@ def mask_image(x, y, c, image, verbose=False):
     # Dimensions are for 10X oversampled pixels, each = 0.01"
     #dx, dy, gridwidth = 20, 40, 6
     dx, dy, gridwidth = 20, 45, 6
-    print('Shutter dimensions: ', dx, dy, gridwidth)
+    #print('Shutter dimensions: ', dx, dy, gridwidth)
 
 
     # Locate pointing center based on input x and y centering parameters
@@ -160,7 +164,7 @@ def mask_image(x, y, c, image, verbose=False):
 
 
 # *********************** gen_central_thrumap ***********************
-def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infile=False, grid=False):
+def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infile=False, grid=False, normalize=True):
     """
     Generate a throughput map of the central shutter (from a 5x5 config).
 
@@ -178,6 +182,8 @@ def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infil
                   d_cube is ignored
     grid       -- Include/exclude a grid over the map (Optional). If set, grid is
                   drawn.
+    normalize  -- Turns on throughput normalization to the maximum. 
+                  (Default is True)
 
     Output(s):
     fig        -- The generated throughput map figure
@@ -214,6 +220,9 @@ def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infil
         steps = np.sqrt(d_cube.shape[0]).astype(np.int)
         x = d_cube[:, 2, 2].reshape(steps,steps)
 
+    # Normalize if desired (to maximum value)
+    if normalize: x = x/x.max()
+    
     # Central shutter representation
     fig, ax = plt.subplots(figsize=(5,8))
     ax.set_xlabel('x')
@@ -225,7 +234,7 @@ def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infil
 
     cmap = cm.get_cmap('jet', 20)    # 20 discrete colors
 
-    cax = plt.contourf(x, cmap=cmap, levels=lvls, antialiased=False, vmin=0.15, vmax=0.7, alpha=0.8)
+    cax = plt.contourf(x, cmap=cmap, levels=lvls, antialiased=False, alpha=0.8)
     plt.axes().set_aspect(2.)
 
     # Extract and plot throughput max
