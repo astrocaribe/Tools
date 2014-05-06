@@ -12,7 +12,7 @@ import pywcs
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 
 # HISTORY
 #    1. Nov 2013 - Vr. 1.0: Added initial PSF tools
@@ -38,6 +38,11 @@ __version__ = "1.0.5"
 #                          - Added the ability to turn on normalization
 #                            of the input throughput grid
 #                          - Changed contour levels min/max
+#    6. May 2014 - Vr. 1.0.6: Updates to gen_3x3_thrumap(), including options for:
+#                          - normalizing throughput map
+#                          - input from datacube or file
+#                          - output filename
+#                          - appropriate title for standard/normalized maps
 
 # Utility definitions
 # *********************** mask_psf ***********************
@@ -221,7 +226,8 @@ def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infil
         x = d_cube[:, 2, 2].reshape(steps,steps)
 
     # Normalize if desired (to maximum value)
-    if normalize: x = x/x.max()
+    if normalize: 
+        x = x/x.max()
     
     # Central shutter representation
     fig, ax = plt.subplots(figsize=(5,8))
@@ -254,7 +260,8 @@ def gen_central_thrumap(d_cube, wavelength, lvls, outfile='./ThruMap.pdf', infil
 
 
 # *********************** gen_3x3_thrumap ***********************
-def gen_3x3_thrumap(infile, wavelength, lvls, s_path):
+def gen_3x3_thrumap(wavelength, lvls, s_path, d_cube=[], outfile='./ThruMap.pdf', 
+                    infile=False, normalize=True):
     """
     Generate a throughput map of the 3x3 central shutter region 
     (from a 5x5 config).
@@ -265,10 +272,15 @@ def gen_3x3_thrumap(infile, wavelength, lvls, s_path):
     21 x and y dithers of a psf within the central shutter.
 
     Keyword arguments:
-    infile     -- Central MSA pointing coordinates
+    d_cube      -- Thruput datacube
     wavelength -- Wavelength over which the map is being generated
     lvls       -- The contour levels to plot
     s_path     -- The save path for the generated map
+    outfile    -- Output filename (Default ./ThruMap.pdf)
+    infile     -- File containing the thruput datacube (Optional). If set, 
+                  d_cube is ignored
+    normalize  -- Turns on throughput normalization to the maximum. 
+                  (Default is True)                  
 
     Output(s):
     fig        -- The generated throughput map figure
@@ -284,18 +296,29 @@ def gen_3x3_thrumap(infile, wavelength, lvls, s_path):
         100. The map is stored in './Maps'.
     """
 
-    # Read in throughput cube
-    hdu = pf.open(infile)
-    steps = hdu[0].header['NSTEP']
-    cube = hdu[1].data.astype(np.float64)
+    if infile:
+        # Read in throughput cube
+        hdu = pf.open(infile)
+        steps = hdu[0].header['NSTEP']
+        cube = hdu[1].data.astype(np.float64)
+    else:
+         steps = np.sqrt(d_cube.shape[0]).astype(np.int)
+         cube = d_cube[:, 2, 2].reshape(steps,steps)
+       
 
     # Setup figure and 3x3 grid
     fig = plt.figure(figsize=(6,12))
-    fig.suptitle('3x3 Throughput Map ({} $\mu m$)'.format(wavelength))
+
+        # Normalize, if desired (to maximum value)
+    if normalize:
+        cube = cube/cube.max()     
+        fig.suptitle('Normalized 3x3 Throughput Map ({} $\mu m$)'.format(wavelength))
+    else:
+        fig.suptitle('Standard 3x3 Throughput Map ({} $\mu m$)'.format(wavelength))    
 
     grid = ImageGrid(fig, 111, # similar to subplot(111)
                      nrows_ncols = (3, 3), # creates 3x3 grid of axes
-                     axes_pad=0.25,  # pad between axes in inch.
+                     axes_pad=0.2,  # pad between axes in inch.
                      aspect=False,
                      share_all=True,
                      label_mode='1',
@@ -319,7 +342,7 @@ def gen_3x3_thrumap(infile, wavelength, lvls, s_path):
     cax = grid.cbar_axes[0].colorbar(im)
 
     # Save figure
-    fig.savefig(s_path+'/Images3D/ThruMap_{}.jpg'.format(wavelength))
+    fig.savefig(outfile)
     
     hdu.close()
     print('MSA 3x3 Shutter Throughput Map ({} µm) done ...'.format(wavelength))
