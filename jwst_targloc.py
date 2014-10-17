@@ -274,7 +274,7 @@ def centroid_2D(image, checkbox_center, checkbox_halfwidth, max_iter=0, threshol
     if c_sum == 0:
         print('(centroid_2D): ERROR - divide by zero.')
         print()
-        break
+        return
     else:
         xcen = xsum / c_sum
         ycen = ysum / c_sum
