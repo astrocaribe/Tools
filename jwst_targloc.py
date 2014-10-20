@@ -81,8 +81,8 @@ def checkbox_2D(image, checkbox, debug=False):
     # Print calculated checkbox center, and sum within checkbox centroid
 
     # Find the checkbox region half-width in x and y
-    xhw = xwidth / 2
-    yhw = ywidth / 2
+    xhw = (xwidth / 2) - 1
+    yhw = (ywidth / 2) - 1
         
     if xpeak < xhw or xpeak > xsize - xhw or ypeak < yhw or ypeak > ysize - yhw:
         print('(checkbox_2D): WARNING - Peak too close to edge of image.')
@@ -182,7 +182,7 @@ def checkbox_1D(image, checkbox, debug=False):
     # Print checkbox center and peak around centroid region
 
     # Find the checkbox region half-width in x and y
-    xhw = xwidth / 2
+    xhw = (xwidth / 2) - 1
         
     if xpeak < xhw or xpeak > xsize - xhw:
         print('(checkbox_1D): WARNING - Peak too close to edge of image.')
