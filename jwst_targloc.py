@@ -3,7 +3,7 @@ import numpy as np
 
 # Header
 __author__ = "Tommy Le Blanc"
-__version__ = "1.0"
+__version__ = "1.0.1"
 
 # HISTORY
 #    1. Feb 2014 - Vr. 1.0: Added initial versions the JWST target locate
