@@ -66,7 +66,6 @@ def checkbox_2D(image, checkbox, debug=False):
                     sumpeak = t
         
         print('(checkbox_2D): Checkbox not equal to both x/ysize.')
-        print()        
 
     
     # If the checkbox size is equal to both the X and Y sizes
@@ -76,7 +75,6 @@ def checkbox_2D(image, checkbox, debug=False):
         sumpeak = np.sum(image, axis=None)
         
         print('(checkbox_2D): Checkbox equal to x/ysize.')
-        print()
         
     # Print calculated checkbox center, and sum within checkbox centroid
 
@@ -86,7 +84,6 @@ def checkbox_2D(image, checkbox, debug=False):
         
     if xpeak < xhw or xpeak > xsize - xhw or ypeak < yhw or ypeak > ysize - yhw:
         print('(checkbox_2D): WARNING - Peak too close to edge of image.')
-        print()
         
 #    NOTE: Use this section of the input image is a subset of a larger image
 #          Not currently needed for this analysis
@@ -103,7 +100,6 @@ def checkbox_2D(image, checkbox, debug=False):
         print('(checkbox_2D): xpeak, ypeak = {}, {}'.format(xpeak, ypeak))
         print('(checkbox_2D): sumpeak = ', sumpeak)
         print('(checkbox_2D): xhw, yhw = {}, {}'.format(xhw, yhw))
-        print()
         
     checkbox_ctr = np.array((xpeak, ypeak))
     checkbox_hfw = np.array((xhw, yhw))
@@ -145,7 +141,6 @@ def checkbox_1D(image, checkbox, debug=False):
     # Reshape to reflect collapse onto x axis
     vector = np.sum(image, axis=0)
     print('(checkbox_1D): Image collapsed into 1D vector.')
-    print()
     
     # Calculate the checkbox half-width
     chw = (checkbox - 1) / 2
@@ -196,7 +191,6 @@ def checkbox_1D(image, checkbox, debug=False):
         print('(checkbox_1D): xwidth = ', xwidth)
         print('(checkbox_1D): xpeak = ', xpeak)
         print('(checkbox_1D): sumpeak = ', sumpeak)
-        print()    
         
 #    NOTE: Use this section of the input image is a subset of a larger image
 #          Not currently needed for this analysis
@@ -269,11 +263,9 @@ def centroid_2D(image, checkbox_center, checkbox_halfwidth, max_iter=0, threshol
     if debug:
         # Initial sum calculation (before iterations)
         print('(centroid_2D): Init. Sum (before iterations) = ', c_sum)
-        print()
 
     if c_sum == 0:
         print('(centroid_2D): ERROR - divide by zero.')
-        print()
         return
     else:
         xcen = xsum / c_sum
@@ -332,7 +324,6 @@ def centroid_2D(image, checkbox_center, checkbox_halfwidth, max_iter=0, threshol
                 
         if c_sum == 0:
             print('(centroid_2D): ERROR - Divide by zero.')
-            print()
         else:
             xcen = xsum / c_sum
             ycen = ysum / c_sum
@@ -353,12 +344,10 @@ def centroid_2D(image, checkbox_center, checkbox_halfwidth, max_iter=0, threshol
         print('(centroid_2D): xpeak, ypeak = {}, {}'.format(xpeak, ypeak))
         print('(centroid_2D): xhw, yhw = {}, {}'.format(xhw, yhw))
         print('(centroid_2D): xcen, ycen = {}, {} '.format(xcen, ycen))        
-        print()
         
                         
     print('(centroid_2D): Centroid = [{}, {}] for num_iter = {}.'.format(xcen-1, ycen-1, num_iter))
     print('(centroid_2D): Converged? ', convergence_flag)
-    print()
           
     # -1 on both axes, as Python is 0 major    
     centroid = np.array((xcen-1, ycen-1))
